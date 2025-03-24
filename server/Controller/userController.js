@@ -44,7 +44,7 @@ const login_User = async(req,res)=>{
         if(!checkUser){
             return res.status(400).send("User not found");
         }
-        const validPassword = bcrypt.compare(password,checkUser.password);
+        const validPassword = await bcrypt.compare(password,checkUser.password);
         if(!validPassword){
             return res.status(400).send("Invalid password");
         }
@@ -53,7 +53,6 @@ const login_User = async(req,res)=>{
       const token = jwt.sign(
         {
           id: checkUser._id,
-          role: checkUser.role,
           email: checkUser.email,
           userName: checkUser.userName,
         },
@@ -61,15 +60,18 @@ const login_User = async(req,res)=>{
         { expiresIn: "24h" }
       );
   
-      res.cookie("token", token, { httpOnly: true, secure: true }).status(200).json({
+      res.cookie("token", token, { httpOnly: true, secure: false }).status(200).json({
         success: true,
         message: "Logged in successfully",
         user: {
           email: checkUser.email,
           id: checkUser._id,
-          userName: checkUser.userName,
+          userName: checkUser.name,
+          token: token,
         },
       });
+    //   console.log(token);
+      
     } catch (error) {
         console.log(error);
         res.status(500).json({
@@ -99,9 +101,81 @@ const authMiddlewere = async(req, res, next) =>{
         })
     }
 }
+//logout
+const logout_controller = (req,res) =>{
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: false,
+    }).status(200).json({
+        success: true,
+        message: "Logged out successfully!",
+    });
+}
 
+
+const getUser_Controller = async(req,res)=>{
+    try {
+        const user = await User.find();
+        res.status(200).json({
+            success : true,
+            message : "user fetched successfully",
+            data : user
+        })
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success : false,
+            message : "server error"
+        })
+    }
+}
+
+const updateUser_controller = async(req,res)=>{
+    try {
+        const id = req.params.id;
+        const data = req.body;
+        const user = await User.findByIdAndUpdate(id, data, {new : true});
+        res.status(200).json({
+            success : true,
+            message : "user updated successfully",
+            data : user
+            })
+        
+    }catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success : false,
+            message : "server error"
+        })
+    }
+}
+
+
+const deleteUser_Controller = async(req,res)=>{
+    try {
+        const id = req.params.id;
+        const deleteUser = await User.findByIdAndDelete(id);
+        res.status(200).json({
+            success : true,
+            message : "user deleted successfully",
+            data : deleteUser
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success : false,
+            message : "server error"
+        })
+        
+    }
+}
 module.exports = {
     register_user,
     login_User,
-    authMiddlewere
+    authMiddlewere,
+    getUser_Controller,
+    updateUser_controller,
+    deleteUser_Controller,
+    logout_controller
 }

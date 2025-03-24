@@ -6,11 +6,11 @@ const cors = require("cors");
 const userRoutes = require('./Routes/userRoutes');
 const cookieParser = require("cookie-parser");
 
-
-
-
-
-app.use(cors());
+// Middleware
+app.use(cors({
+    origin: "http://localhost:3001", // Your frontend URL
+    credentials: true // Allow cookies
+}));
 app.use(express.json());  // Middleware to parse JSON request body
 app.use(cookieParser());
 app.use('/api', userRoutes); // Prefix your routes with /api
@@ -24,6 +24,8 @@ mongoose.connect("mongodb+srv://sharmakomalweb:3qvcLD00F3ps0Zo0@cluster0.1darij1
     }}).catch((error)=>{
     console.log(error)
 })
+
+// Start the server
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
     }
